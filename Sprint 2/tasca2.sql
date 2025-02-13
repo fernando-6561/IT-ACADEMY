@@ -84,3 +84,85 @@ WHERE c.id NOT IN
 	) ;
 
 #--------------------------------------------------------------------------#
+/*  NIVEL 2 - EJERCICIO 1: Identificación de 5 dias con mayor transacciones. Datos de transacciones y monto de ventas */
+SELECT SUM(t.amount) AS ingreso_diario, DATE(t.timestamp) AS fecha
+FROM company AS c
+INNER JOIN transaction AS t
+ON c.id = t.company_id
+WHERE t.declined = FALSE
+GROUP BY fecha
+ORDER BY ingreso_diario DESC
+LIMIT 5;
+
+/*  NIVEL 2 - EJERCICIO 2: Media de ventas por pais en orden descendente */
+SELECT ROUND(AVG(t.amount),2) AS media_ventas_pais, country
+FROM company AS c
+INNER JOIN transaction AS t
+ON c.id = t.company_id
+WHERE t.declined = FALSE
+GROUP BY country
+ORDER BY media_ventas_pais DESC;
+
+/*  NIVEL 2 - EJERCICIO 3: Análisis competitivo a empresa ¨Non Institute USANDO JOINS Y SUBCONSULTAS */
+SELECT t.*
+FROM transaction AS t
+INNER JOIN company AS c
+ON c.id = t.company_id
+WHERE country =
+	(
+	SELECT c.country
+	FROM company as c
+	WHERE company_name = 'Non Institute'
+	);
+
+/*  NIVEL 2 - EJERCICIO 3: Análisis competitivo a empresa ¨Non Institute USANDO SUBCONSULTAS */
+SELECT t.*
+FROM transaction AS t
+WHERE company_id IN 
+	(
+	SELECT c.id
+	FROM company AS c
+	WHERE c.country =
+		(
+		SELECT c.country
+		FROM company as c
+		WHERE company_name = 'Non Institute'
+		)
+	);
+
+#--------------------------------------------------------------------------#
+/*  NIVEL 3 - EJERCICIO 1: Extracción de datos con múltiples condiciones */
+SELECT c.company_name, c.phone, c.country, DATE(t.timestamp) AS fecha, t.amount
+FROM company AS c
+INNER JOIN transaction AS t
+ON c.id = t.company_id
+WHERE t.amount BETWEEN 100 AND 200
+AND DATE(t.timestamp) IN ('2021-04-29' , '2021-07-20' , '2022-03-13')
+AND t.declined = FALSE /*irrelevante en este caso */
+ORDER BY t.amount DESC;
+
+/*  NIVEL 3 - EJERCICIO 2: Conteo transacciones por empresa y creación de nueva variable calculada para categorizar */
+SELECT c.company_name, COUNT(*) AS cantidad_transacciones, 
+CASE
+    WHEN COUNT(*) >= 4 THEN 'Más de 4 transacciones'
+    WHEN COUNT(*) < 4 THEN 'Menos de 4 transacciones'
+END AS Categoria_Cliente
+FROM transaction AS t
+INNER JOIN company AS c
+ON c.id = t.company_id
+GROUP BY c.company_name
+ORDER BY cantidad_transacciones DESC;
+
+/*  NIVEL 3 - EJERCICIO 2: Conteo transacciones por empresa y creación de nueva variable calculada para categorizar */
+/*SIN TRANSACCIONES DECLINADAS*/
+SELECT c.company_name, COUNT(*) AS cantidad_transacciones, 
+CASE
+    WHEN COUNT(*) >= 4 THEN 'Más de 4 transacciones'
+    WHEN COUNT(*) < 4 THEN 'Menos de 4 transacciones'
+END AS Categoria_Cliente
+FROM transaction AS t
+INNER JOIN company AS c
+ON c.id = t.company_id
+WHERE t.declined = FALSE 
+GROUP BY c.company_name
+ORDER BY cantidad_transacciones DESC;
