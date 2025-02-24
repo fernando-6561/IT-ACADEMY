@@ -47,19 +47,22 @@ WHERE id = 'CcU-2938';
 INSERT INTO transaction (id, credit_card_id, company_id, user_id, lat, longitude, amount, declined) 
 VALUES ('108B1D1D-5B23-A76C-55EF-C568E49A99DD', 'CcU-9999', 'b-9999', '9999', '829.999', '-117.999', '111.11', '0');
 -- NO FUNCIONA, primero hay que poblar las tablas de dimensiones con los datos que los valores de las fk referencian.
-/*
-INSERT INTO company (id) 
-VALUES ('b-9999');
-SELECT * 
-FROM company
-WHERE id = 'b-9999';
 
 INSERT INTO company (id) 
 VALUES ('b-9999');
 SELECT * 
 FROM company
 WHERE id = 'b-9999';
-*/
+
+INSERT INTO credit_card (id) 
+VALUES ('CcU-9999');
+SELECT * 
+FROM credit_card
+WHERE id = 'CcU-9999';
+
+/*Volvemos a intentar el ingreso solicitado a la tabla 'transaction'*/
+INSERT INTO transaction (id, credit_card_id, company_id, user_id, lat, longitude, amount, declined) 
+VALUES ('108B1D1D-5B23-A76C-55EF-C568E49A99DD', 'CcU-9999', 'b-9999', '9999', '829.999', '-117.999', '111.11', '0');
 
 /* NIVEL 1 - EJERCICIO 4: Eliminar columna de tabla*/
 -- Eliminamos columna 'pan' de tabla 'credit_card'
@@ -94,6 +97,10 @@ ON c.id = t.company_id
 GROUP BY company_name, phone, country
 ORDER BY Media_Compras DESC;
 
+-- Revision de la VIEW
+SELECT *
+FROM VistaMarketing;
+
 /* NIVEL 2 - EJERCICIO 3: Selección de datos de una VIEW*/
 SELECT *
 FROM VistaMarketing
@@ -101,13 +108,34 @@ WHERE country = 'Germany'
 ORDER BY Media_Compras DESC;
 
 #--------------------------------------------------------------------------#
-/* NIVEL 3 - EJERCICIO 1: Creacion de una Foreign Key transaction->user*/
+/* NIVEL 3 - EJERCICIO 1: Ingreso registro en user para conectar con registro conectado en EJERCICIO 3 - NIVEL 1*/
+INSERT INTO user (id) 
+VALUES ('9999');
+SELECT * 
+FROM user
+WHERE id = '9999';
+
+/*Creacion de una Foreign Key transaction->user*/
 ALTER TABLE transaction
 ADD FOREIGN KEY (user_id) REFERENCES user(id);
 
-/*Cambiamos el nombre de la tabla 'user' a 'data_user'*/
-ALTER TABLE user
-RENAME TO data_user;
+/*NIVEL 3 - EJERCICIO 1: AJUSTES DE TABLAS*/
+-- Cambiar de tipos de datos:
+ALTER TABLE transaction MODIFY COLUMN user_id INT; 
+ALTER TABLE user MODIFY COLUMN id INT;
+ALTER TABLE credit_card MODIFY COLUMN cvv INT;
+
+-- Cambiar nombre campo:
+ALTER TABLE user CHANGE email personal_email VARCHAR(150);
+
+-- Cambiar nombre tabla 'user' a 'data_user'
+ALTER TABLE user RENAME TO data_user;
+
+-- Eliminar campo 'website' de tabla 'company'
+ALTER TABLE company DROP COLUMN website;
+
+-- Agregar campo 'fecha'actual' a tabla 'credit_card'
+ALTER TABLE credit_card  ADD fecha_actual DATE;
 
 /* NIVEL 3 - EJERCICIO 2: Seleccion de datos con de diversas tablas*/
 /*Syntaxis multiples JOINS. 3 tablas de Dimensiones y 1 tabla de Hechos
@@ -122,6 +150,7 @@ INNER JOIN dim_customer c ON f.customer_id = c.customer_id
 INNER JOIN dim_product p ON f.product_id = p.product_id
 INNER JOIN dim_date d ON f.date_id = d.date_id;
 */
+CREATE VIEW InformeTecnico AS
 SELECT 
     t.id AS id_transaccion,
     data_user.name AS nombre,
@@ -133,3 +162,6 @@ INNER JOIN company ON t.company_id = company.id
 INNER JOIN credit_card ON t.credit_card_id = credit_card.id
 INNER JOIN data_user ON t.user_id = data_user.id
 ORDER BY id_transaccion DESC;
+
+SELECT * 
+FROM InformeTecnico;
